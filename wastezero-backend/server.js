@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
-
+// this comment is added by harshal
 const app = require('./app');
 
 const server = http.createServer(app);
