@@ -1,3 +1,7 @@
+
+//server.js file
+
+
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -28,6 +32,7 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/wastezero';
 
+//NewOne Added
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');
