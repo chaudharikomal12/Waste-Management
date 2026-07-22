@@ -1,0 +1,170 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <h2>Admin Panel</h2>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button [class.active]="activeTab==='overview'" (click)="setTab('overview')">Overview</button>
+      <button [class.active]="activeTab==='users'" (click)="setTab('users')">Users</button>
+      <button [class.active]="activeTab==='pickups'" (click)="setTab('pickups')">Pickups</button>
+      <button [class.active]="activeTab==='reports'" (click)="setTab('reports')">Reports</button>
+      <button [class.active]="activeTab==='logs'" (click)="setTab('logs')">Logs</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <ng-container *ngIf="activeTab === 'overview'">
+      <div class="stats-grid">
+        <mat-card class="stat-card"><mat-card-content><div class="stat-num">{{ stats.totalUsers }}</div><div class="stat-label">Registered Users</div></mat-card-content></mat-card>
+        <mat-card class="stat-card blue"><mat-card-content><div class="stat-num">{{ stats.totalVolunteers }}</div><div class="stat-label">Volunteers</div></mat-card-content></mat-card>
+        <mat-card class="stat-card orange"><mat-card-content><div class="stat-num">{{ stats.pendingPickups }}</div><div class="stat-label">Pending Pickups</div></mat-card-content></mat-card>
+        <mat-card class="stat-card green"><mat-card-content><div class="stat-num">{{ stats.completedPickups }}</div><div class="stat-label">Completed Pickups</div></mat-card-content></mat-card>
+        <mat-card class="stat-card purple"><mat-card-content><div class="stat-num">{{ stats.totalOpportunities }}</div><div class="stat-label">Opportunities</div></mat-card-content></mat-card>
+        <mat-card class="stat-card"><mat-card-content><div class="stat-num">{{ stats.totalApplications }}</div><div class="stat-label">Total Applications</div></mat-card-content></mat-card>
+      </div>
+    </ng-container>
+
+    <!-- USERS -->
+    <ng-container *ngIf="activeTab === 'users'">
+      <div *ngIf="loading" class="loading-center"><mat-spinner></mat-spinner></div>
+      <table mat-table [dataSource]="users" class="data-table" *ngIf="!loading">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let u">{{ u.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+        </ng-container>
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let u"><span class="role-chip" [ngClass]="u.role">{{ u.role | titlecase }}</span></td>
+        </ng-container>
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef>Location</th>
+          <td mat-cell *matCellDef="let u">{{ u.location || '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let u">
+            <span class="chip" [ngClass]="u.isSuspended ? 'suspended' : 'active'">
+              {{ u.isSuspended ? 'Suspended' : 'Active' }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let u">
+            <button mat-button [color]="u.isSuspended ? 'primary' : 'warn'" (click)="toggleSuspend(u)">
+              {{ u.isSuspended ? 'Activate' : 'Suspend' }}
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="['name','email','role','location','status','actions']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['name','email','role','location','status','actions']"></tr>
+      </table>
+    </ng-container>
+
+    <!-- PICKUPS -->
+    <ng-container *ngIf="activeTab === 'pickups'">
+      <div *ngIf="loading" class="loading-center"><mat-spinner></mat-spinner></div>
+      <ng-container *ngIf="!loading">
+        <mat-card *ngFor="let p of pickups" class="pickup-card">
+          <mat-card-content>
+            <div class="row">
+              <div>
+                <strong>{{ p.wasteType }}</strong> — {{ p.pickupAddress }}
+                <div class="sub">User: {{ p.userId?.name }} | Date: {{ p.preferredDate | date }}</div>
+                <div class="sub" *ngIf="p.assignedVolunteer">Volunteer: {{ p.assignedVolunteer?.name }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                <span class="chip" [ngClass]="p.status">{{ p.status | titlecase }}</span>
+                <button mat-button color="warn" (click)="deletePickup(p._id)">
+                  <mat-icon>delete</mat-icon> Remove
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </ng-container>
+    </ng-container>
+
+    <!-- REPORTS -->
+    <ng-container *ngIf="activeTab === 'reports'">
+      <div class="reports-grid">
+        <mat-card>
+          <mat-card-header><mat-card-title>User Report</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <div class="report-row"><span>Total Users</span><strong>{{ userReport.total }}</strong></div>
+            <div class="report-row"><span>Active Users</span><strong>{{ userReport.active }}</strong></div>
+            <div class="report-row"><span>Volunteers</span><strong>{{ userReport.volunteers }}</strong></div>
+            <button mat-button (click)="exportUserReportPDF()"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-header><mat-card-title>Pickup Report</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <div class="report-row"><span>Total Pickups</span><strong>{{ pickupReport.total }}</strong></div>
+            <div class="report-row"><span>Completed</span><strong>{{ pickupReport.completed }}</strong></div>
+            <div class="report-row"><span>Pending</span><strong>{{ pickupReport.pending }}</strong></div>
+            <div class="report-row"><span>Accepted</span><strong>{{ pickupReport.accepted }}</strong></div>
+            <button mat-button (click)="exportPickupReportPDF()"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-header><mat-card-title>Waste by Category</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <div *ngFor="let w of wasteReport" class="report-row">
+              <span>{{ w._id }}</span><strong>{{ w.count }}</strong>
+            </div>
+            <p *ngIf="wasteReport.length === 0" class="empty">No data yet.</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-header><mat-card-title>Application Report</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <div class="report-row"><span>Total Applications</span><strong>{{ applicationReport.total }}</strong></div>
+            <div class="report-row"><span>Accepted</span><strong>{{ applicationReport.accepted }}</strong></div>
+            <div class="report-row"><span>Rejected</span><strong>{{ applicationReport.rejected }}</strong></div>
+            <div class="report-row"><span>Pending</span><strong>{{ applicationReport.pending }}</strong></div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-header><mat-card-title>Volunteer Report</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <div class="report-row"><span>Total Volunteers</span><strong>{{ volunteerReport.totalVolunteers }}</strong></div>
+            <div class="report-row"><span>Active Volunteers</span><strong>{{ volunteerReport.activeVolunteers }}</strong></div>
+            <div class="volunteer-subheading" *ngIf="volunteerReport.perVolunteer?.length">Completed pickups per volunteer:</div>
+            <div *ngFor="let v of volunteerReport.perVolunteer" class="report-row">
+              <span>{{ v.name }}</span><strong>{{ v.completedCount }}</strong>
+            </div>
+            <p *ngIf="!volunteerReport.perVolunteer?.length" class="empty">No completed pickups yet.</p>
+            <button mat-button (click)="exportVolunteerReportPDF()"><mat-icon>picture_as_pdf</mat-icon> Export PDF</button>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <button mat-stroked-button (click)="exportCSV(pickups, 'pickups-report')">
+        <mat-icon>download</mat-icon> Export Pickups CSV
+      </button>
+    </ng-container>
+
+    <!-- LOGS -->
+    <ng-container *ngIf="activeTab === 'logs'">
+      <mat-card *ngFor="let log of logs" class="log-card">
+        <mat-card-content>
+          <div class="row">
+            <span><strong>{{ log.adminId?.name }}</strong> performed <em>{{ log.action }}</em>
+              <span *ngIf="log.affectedUserId"> on {{ log.affectedUserId?.name }}</span>
+            </span>
+            <span class="log-time">{{ log.createdAt | date:'medium' }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      <p *ngIf="logs.length === 0" class="empty">No logs yet.</p>
+    </ng-container>
+  </div>
+</div>

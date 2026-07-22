@@ -1,0 +1,94 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+  <div class="chat-layout">
+    <!-- Contacts -->
+    <div class="contacts-panel">
+      <div class="panel-header">
+        <h3 class="panel-title">Messages</h3>
+        <button mat-icon-button class="new-msg-btn" (click)="openNewMessagePanel()" title="New Message">
+          <mat-icon>edit_square</mat-icon>
+        </button>
+      </div>
+      <div *ngFor="let c of contacts" class="contact-item"
+        [class.selected]="selectedContact?._id === c._id"
+        (click)="selectContact(c)">
+        <div class="avatar">{{ c.name?.charAt(0).toUpperCase() }}</div>
+        <div>
+          <div class="contact-name">{{ c.name }}</div>
+          <div class="contact-role">{{ c.role | titlecase }}</div>
+        </div>
+      </div>
+      <div *ngIf="contacts.length === 0" class="empty-state">
+        <p class="empty">No conversations yet.</p>
+        <button mat-stroked-button color="primary" (click)="openNewMessagePanel()">
+          <mat-icon>edit_square</mat-icon> Start a conversation
+        </button>
+      </div>
+    </div>
+
+    <!-- New Message Picker Overlay -->
+    <div class="picker-overlay" *ngIf="showNewMessagePanel" (click)="showNewMessagePanel = false">
+      <div class="picker-panel" (click)="$event.stopPropagation()">
+        <div class="picker-header">
+          <h3>New Message</h3>
+          <button mat-icon-button (click)="showNewMessagePanel = false"><mat-icon>close</mat-icon></button>
+        </div>
+        <mat-form-field appearance="outline" class="picker-search">
+          <mat-label>Search by name or email</mat-label>
+          <input matInput [(ngModel)]="contactSearch" placeholder="e.g. Priya">
+        </mat-form-field>
+        <div class="picker-list">
+          <div *ngFor="let u of filteredContactableUsers" class="contact-item" (click)="startConversationWith(u)">
+            <div class="avatar">{{ u.name?.charAt(0).toUpperCase() }}</div>
+            <div>
+              <div class="contact-name">{{ u.name }}</div>
+              <div class="contact-role">{{ u.role | titlecase }} · {{ u.location || 'No location set' }}</div>
+            </div>
+          </div>
+          <p *ngIf="filteredContactableUsers.length === 0" class="empty">No matching users found.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Window -->
+    <div class="chat-window" *ngIf="selectedContact; else noChat">
+      <div class="chat-header">
+        <div class="avatar">{{ selectedContact.name?.charAt(0).toUpperCase() }}</div>
+        <div>
+          <strong>{{ selectedContact.name }}</strong>
+          <div class="contact-role">{{ selectedContact.role | titlecase }}</div>
+        </div>
+      </div>
+
+      <div class="messages-area">
+        <div *ngFor="let msg of messages" class="msg-wrapper" [class.own]="isOwn(msg)">
+          <div class="bubble" [class.own-bubble]="isOwn(msg)">
+            {{ msg.content }}
+            <div class="msg-time">{{ msg.createdAt | date:'shortTime' }}</div>
+          </div>
+        </div>
+        <p *ngIf="messages.length === 0" class="empty centered">No messages yet — say hello!</p>
+      </div>
+
+      <div class="message-input">
+        <mat-form-field appearance="outline" class="input-field">
+          <input matInput [(ngModel)]="newMessage" placeholder="Type a message..."
+            (keyup.enter)="sendMessage()">
+        </mat-form-field>
+        <button mat-icon-button color="primary" (click)="sendMessage()" [disabled]="!newMessage.trim()">
+          <mat-icon>send</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <ng-template #noChat>
+      <div class="no-chat">
+        <mat-icon class="big-icon">chat_bubble_outline</mat-icon>
+        <p>Select a conversation, or start a new one</p>
+        <button mat-raised-button color="primary" (click)="openNewMessagePanel()">
+          <mat-icon>edit_square</mat-icon> New Message
+        </button>
+      </div>
+    </ng-template>
+  </div>
+</div>

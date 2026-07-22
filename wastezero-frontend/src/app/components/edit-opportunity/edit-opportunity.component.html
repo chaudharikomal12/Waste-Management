@@ -1,0 +1,59 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <h2>Edit Opportunity</h2>
+
+    <div *ngIf="loading" class="loading-center"><mat-spinner></mat-spinner></div>
+
+    <mat-card class="form-card" *ngIf="!loading">
+      <mat-card-content>
+        <form [formGroup]="oppForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Title</mat-label>
+            <input matInput formControlName="title">
+            <mat-error *ngIf="oppForm.get('title')?.hasError('required')">Title is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="3"></textarea>
+            <mat-error *ngIf="oppForm.get('description')?.hasError('required')">Description is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Required Skills (comma-separated)</mat-label>
+            <input matInput formControlName="requiredSkills">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Duration</mat-label>
+            <input matInput formControlName="duration" placeholder="e.g. 2 hours">
+            <mat-error *ngIf="oppForm.get('duration')?.hasError('required')">Duration is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Location</mat-label>
+            <input matInput formControlName="location">
+            <mat-error *ngIf="oppForm.get('location')?.hasError('required')">Location is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="open">Open</mat-option>
+              <mat-option value="in-progress">In Progress</mat-option>
+              <mat-option value="closed">Closed</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="oppForm.invalid || saving">
+              Save Changes
+            </button>
+            <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

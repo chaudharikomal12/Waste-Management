@@ -1,0 +1,13 @@
+<mat-toolbar color="primary" class="navbar">
+  <span class="logo">♻️ WasteZero</span>
+  <span class="spacer"></span>
+  <ng-container *ngIf="user">
+    <button mat-icon-button [matBadge]="notificationCount" matBadgeColor="warn" routerLink="/messages">
+      <mat-icon>notifications</mat-icon>
+    </button>
+    <span class="username">{{ user.name }}</span>
+    <button mat-icon-button (click)="logout()" title="Logout">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </ng-container>
+</mat-toolbar>

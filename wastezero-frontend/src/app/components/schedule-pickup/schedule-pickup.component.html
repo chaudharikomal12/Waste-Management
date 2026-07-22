@@ -1,0 +1,79 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <h2>Schedule a Waste Pickup</h2>
+
+    <div class="two-col">
+      <!-- FORM -->
+      <mat-card class="form-card">
+        <mat-card-header><mat-card-title>New Pickup Request</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <form [formGroup]="pickupForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Waste Type</mat-label>
+              <mat-select formControlName="wasteType">
+                <mat-option *ngFor="let t of wasteTypes" [value]="t">{{ t }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Waste Description (optional)</mat-label>
+              <textarea matInput formControlName="wasteDescription" rows="2"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Estimated Quantity / Weight</mat-label>
+              <input matInput formControlName="estimatedQuantity" placeholder="e.g. 5 kg, 2 bags">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Pickup Address</mat-label>
+              <input matInput formControlName="pickupAddress">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Preferred Date</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="preferredDate">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Preferred Time</mat-label>
+              <input matInput type="time" formControlName="preferredTime">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Contact Details (optional)</mat-label>
+              <input matInput formControlName="contactDetails" placeholder="Phone number or notes">
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" type="submit" class="full-width"
+              [disabled]="pickupForm.invalid || loading">
+              Schedule Pickup
+            </button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- HISTORY -->
+      <div class="history">
+        <h3>My Pickup History</h3>
+        <mat-card *ngFor="let p of myPickups" class="pickup-card">
+          <mat-card-content>
+            <div class="row">
+              <strong>{{ p.wasteType }}</strong>
+              <span class="chip" [ngClass]="p.status">{{ p.status | titlecase }}</span>
+            </div>
+            <div class="sub">{{ p.pickupAddress }}</div>
+            <div class="sub">{{ p.preferredDate | date }} · {{ p.preferredTime }}</div>
+            <div class="sub" *ngIf="p.assignedVolunteer">
+              Volunteer: {{ p.assignedVolunteer.name }}
+            </div>
+          </mat-card-content>
+        </mat-card>
+        <p *ngIf="myPickups.length === 0" class="empty">No pickup requests yet.</p>
+      </div>
+    </div>
+  </div>
+</div>

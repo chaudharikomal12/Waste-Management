@@ -1,0 +1,7 @@
+.page-layout { display:flex; min-height:calc(100vh - 64px); }
+.content { flex:1; padding:24px; }
+.form-card { max-width:600px; padding:8px; }
+.full-width { width:100%; margin-bottom:12px; }
+.half-width { width:48%; margin-bottom:12px; margin-right:2%; }
+.form-actions { display:flex; gap:12px; margin-top:8px; }
+.loading-center { display:flex; justify-content:center; padding:60px; }

@@ -1,0 +1,146 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <div *ngIf="loading" class="loading-center"><mat-spinner></mat-spinner></div>
+
+    <ng-container *ngIf="!loading">
+      <h2 class="welcome">Welcome back, {{ user?.name }}! 👋</h2>
+      <p class="role-badge">Role: <strong>{{ role | titlecase }}</strong></p>
+
+      <!-- USER DASHBOARD -->
+      <ng-container *ngIf="role === 'user'">
+        <div class="stats-grid">
+          <mat-card class="stat-card"><mat-card-content><div class="stat-num">{{ stats.total }}</div><div class="stat-label">Total Requests</div></mat-card-content></mat-card>
+          <mat-card class="stat-card green"><mat-card-content><div class="stat-num">{{ stats.completed }}</div><div class="stat-label">Completed</div></mat-card-content></mat-card>
+          <mat-card class="stat-card orange"><mat-card-content><div class="stat-num">{{ stats.pending }}</div><div class="stat-label">Pending</div></mat-card-content></mat-card>
+          <mat-card class="stat-card blue"><mat-card-content><div class="stat-num">{{ stats.accepted }}</div><div class="stat-label">Accepted</div></mat-card-content></mat-card>
+        </div>
+        <div class="quick-actions">
+          <button mat-raised-button color="primary" routerLink="/schedule-pickup"><mat-icon>add</mat-icon> Schedule Pickup</button>
+          <button mat-stroked-button routerLink="/schedule-pickup"><mat-icon>history</mat-icon> View Pickup History</button>
+          <button mat-stroked-button routerLink="/messages"><mat-icon>chat</mat-icon> Messages</button>
+          <button mat-stroked-button routerLink="/profile"><mat-icon>person</mat-icon> My Profile</button>
+        </div>
+
+        <h3>My Impact</h3>
+        <mat-card class="impact-card">
+          <mat-card-content>
+            <div class="impact-total">{{ impact.totalCompleted || 0 }} <span>pickups completed</span></div>
+            <div class="impact-breakdown" *ngIf="impact.breakdown?.length">
+              <div *ngFor="let b of impact.breakdown" class="impact-row">
+                <span>{{ b._id }}</span>
+                <span class="impact-count">{{ b.count }}</span>
+              </div>
+            </div>
+            <p *ngIf="!impact.breakdown?.length" class="empty-inline">No completed pickups yet — your recycling impact will show up here.</p>
+          </mat-card-content>
+        </mat-card>
+
+        <h3>Recent Pickup Requests</h3>
+        <mat-card *ngFor="let p of pickups.slice(0,5)" class="pickup-card">
+          <mat-card-content>
+            <div class="pickup-row">
+              <span><strong>{{ p.wasteType }}</strong> — {{ p.pickupAddress }}</span>
+              <span class="status-chip" [ngClass]="p.status">{{ p.status | titlecase }}</span>
+            </div>
+            <div class="pickup-date">{{ p.preferredDate | date }} at {{ p.preferredTime }}</div>
+          </mat-card-content>
+        </mat-card>
+      </ng-container>
+
+      <!-- VOLUNTEER DASHBOARD -->
+      <ng-container *ngIf="role === 'volunteer'">
+        <div class="stats-grid">
+          <mat-card class="stat-card blue"><mat-card-content><div class="stat-num">{{ stats.assigned || 0 }}</div><div class="stat-label">Assigned Pickups</div></mat-card-content></mat-card>
+          <mat-card class="stat-card green"><mat-card-content><div class="stat-num">{{ stats.completed || 0 }}</div><div class="stat-label">Completed</div></mat-card-content></mat-card>
+        </div>
+        <div class="quick-actions">
+          <button mat-raised-button color="primary" routerLink="/opportunities"><mat-icon>search</mat-icon> View Opportunities</button>
+          <button mat-stroked-button (click)="scrollToAssigned()"><mat-icon>assignment</mat-icon> My Assigned Pickups</button>
+          <button mat-stroked-button routerLink="/messages"><mat-icon>chat</mat-icon> Messages</button>
+          <button mat-stroked-button routerLink="/profile"><mat-icon>person</mat-icon> Profile</button>
+        </div>
+
+        <h3>Available Pickup Requests</h3>
+        <p *ngIf="opportunities.length === 0" class="empty-inline">No open pickup requests at the moment.</p>
+        <mat-card *ngFor="let p of opportunities" class="pickup-card">
+          <mat-card-content>
+            <div class="pickup-row">
+              <div>
+                <strong>{{ p.wasteType }}</strong> — {{ p.pickupAddress }}
+                <div class="pickup-date">{{ p.preferredDate | date }} at {{ p.preferredTime }}</div>
+                <div class="pickup-date" *ngIf="p.wasteDescription">{{ p.wasteDescription }}</div>
+                <div class="pickup-date">Qty: {{ p.estimatedQuantity }}</div>
+              </div>
+              <div class="card-actions">
+                <span class="status-chip open">Open</span>
+                <button mat-raised-button color="primary" (click)="acceptPickup(p)" [disabled]="p._accepting">
+                  <mat-icon>check</mat-icon> Accept
+                </button>
+                <button mat-stroked-button [routerLink]="['/messages']" (click)="startChatWith(p.userId)">
+                  <mat-icon>chat</mat-icon> Contact User
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <h3 id="assigned-section" style="margin-top:24px">My Assigned Pickups</h3>
+        <p *ngIf="assignedPickups.length === 0" class="empty-inline">No assigned pickups yet.</p>
+        <mat-card *ngFor="let p of assignedPickups" class="pickup-card">
+          <mat-card-content>
+            <div class="pickup-row">
+              <div>
+                <strong>{{ p.wasteType }}</strong> — {{ p.pickupAddress }}
+                <div class="pickup-date">{{ p.preferredDate | date }} at {{ p.preferredTime }}</div>
+                <div class="pickup-date" *ngIf="p.userId?.name">Citizen: {{ p.userId?.name }}</div>
+              </div>
+              <div class="card-actions">
+                <span class="status-chip" [ngClass]="p.status">{{ p.status | titlecase }}</span>
+                <button mat-raised-button color="accent"
+                  *ngIf="p.status === 'accepted'"
+                  (click)="completePickup(p)" [disabled]="p._completing">
+                  <mat-icon>done_all</mat-icon> Mark Complete
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </ng-container>
+
+      <!-- ADMIN DASHBOARD -->
+      <ng-container *ngIf="role === 'admin'">
+        <div class="stats-grid">
+          <mat-card class="stat-card"><mat-card-content><div class="stat-num">{{ stats.totalUsers }}</div><div class="stat-label">Total Users</div></mat-card-content></mat-card>
+          <mat-card class="stat-card blue"><mat-card-content><div class="stat-num">{{ stats.totalVolunteers }}</div><div class="stat-label">Volunteers</div></mat-card-content></mat-card>
+          <mat-card class="stat-card orange"><mat-card-content><div class="stat-num">{{ stats.pendingPickups }}</div><div class="stat-label">Pending Pickups</div></mat-card-content></mat-card>
+          <mat-card class="stat-card green"><mat-card-content><div class="stat-num">{{ stats.completedPickups }}</div><div class="stat-label">Completed Pickups</div></mat-card-content></mat-card>
+          <mat-card class="stat-card purple"><mat-card-content><div class="stat-num">{{ stats.totalOpportunities }}</div><div class="stat-label">Opportunities</div></mat-card-content></mat-card>
+          <mat-card class="stat-card"><mat-card-content><div class="stat-num">{{ stats.totalApplications }}</div><div class="stat-label">Total Applications</div></mat-card-content></mat-card>
+          <mat-card class="stat-card"><mat-card-content><div class="stat-num">{{ stats.totalPickups }}</div><div class="stat-label">Total Pickups</div></mat-card-content></mat-card>
+        </div>
+        <div class="quick-actions">
+          <button mat-raised-button color="primary" routerLink="/admin"><mat-icon>admin_panel_settings</mat-icon> Admin Panel</button>
+          <button mat-stroked-button routerLink="/opportunities"><mat-icon>volunteer_activism</mat-icon> Manage Opportunities</button>
+          <button mat-stroked-button routerLink="/messages"><mat-icon>chat</mat-icon> Messages</button>
+        </div>
+
+        <h3>Recent System Activity</h3>
+        <mat-card class="activity-card">
+          <mat-card-content>
+            <div *ngFor="let log of recentActivities" class="activity-row">
+              <mat-icon class="activity-icon">admin_panel_settings</mat-icon>
+              <div class="activity-info">
+                <span><strong>{{ log.adminId?.name }}</strong> — {{ log.action | titlecase }}
+                  <span *ngIf="log.affectedUserId"> on <strong>{{ log.affectedUserId?.name }}</strong></span>
+                </span>
+                <div class="activity-time">{{ log.createdAt | date:'medium' }}</div>
+              </div>
+            </div>
+            <p *ngIf="recentActivities.length === 0" class="empty-inline">No recent activity yet.</p>
+          </mat-card-content>
+        </mat-card>
+      </ng-container>
+    </ng-container>
+  </div>
+</div>

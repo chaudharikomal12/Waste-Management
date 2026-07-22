@@ -1,0 +1,101 @@
+<div class="page-layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <div class="header-row">
+      <h2>{{ role === 'volunteer' ? 'Matched Opportunities' : 'Manage Opportunities' }}</h2>
+      <button *ngIf="role === 'admin'" mat-raised-button color="primary" (click)="showCreateForm = !showCreateForm">
+        <mat-icon>add</mat-icon> New Opportunity
+      </button>
+    </div>
+
+    <!-- Admin Create Form -->
+    <mat-card *ngIf="showCreateForm && role === 'admin'" class="create-form">
+      <mat-card-header><mat-card-title>Create Opportunity</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="oppForm" (ngSubmit)="createOpportunity()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Title</mat-label><input matInput formControlName="title">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label><textarea matInput formControlName="description" rows="3"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Required Skills (comma-separated)</mat-label><input matInput formControlName="requiredSkills">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Duration</mat-label><input matInput formControlName="duration" placeholder="e.g. 2 hours">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Location</mat-label><input matInput formControlName="location">
+          </mat-form-field>
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="oppForm.invalid">Create</button>
+            <button mat-stroked-button type="button" (click)="showCreateForm = false">Cancel</button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Applications Panel -->
+    <mat-card *ngIf="selectedOpp" class="apps-panel">
+      <mat-card-header>
+        <mat-card-title>Applications for: {{ selectedOpp.title }}</mat-card-title>
+        <button mat-icon-button (click)="selectedOpp = null"><mat-icon>close</mat-icon></button>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngFor="let app of oppApplications" class="app-row">
+          <div>
+            <strong>{{ app.volunteer_id?.name }}</strong> — {{ app.volunteer_id?.email }}
+            <div class="sub">Location: {{ app.volunteer_id?.location }}</div>
+          </div>
+          <div class="app-actions">
+            <span class="chip" [ngClass]="app.status">{{ app.status | titlecase }}</span>
+            <button *ngIf="app.status === 'pending'" mat-button color="primary" (click)="updateStatus(app._id, 'accepted')">Accept</button>
+            <button *ngIf="app.status === 'pending'" mat-button color="warn" (click)="updateStatus(app._id, 'rejected')">Reject</button>
+          </div>
+        </div>
+        <p *ngIf="oppApplications.length === 0" class="empty">No applications yet.</p>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Opportunities List -->
+    <div *ngIf="loading" class="loading-center"><mat-spinner></mat-spinner></div>
+    <mat-card *ngFor="let opp of opportunities" class="opp-card">
+      <mat-card-content>
+        <div class="opp-header">
+          <div>
+            <h3 class="opp-title">{{ opp.title }}</h3>
+            <p class="opp-desc">{{ opp.description }}</p>
+          </div>
+          <span class="chip" [ngClass]="opp.status">{{ opp.status | titlecase }}</span>
+        </div>
+        <div class="opp-meta">
+          <span><mat-icon class="meta-icon">location_on</mat-icon> {{ opp.location }}</span>
+          <span><mat-icon class="meta-icon">schedule</mat-icon> {{ opp.duration }}</span>
+          <span *ngIf="opp.ngo_id"><mat-icon class="meta-icon">business</mat-icon> {{ opp.ngo_id.name }}</span>
+          <span *ngIf="opp.requiredSkills?.length"><mat-icon class="meta-icon">category</mat-icon> {{ opp.requiredSkills.join(', ') }}</span>
+        </div>
+        <div class="skills" *ngIf="opp.requiredSkills?.length">
+          <mat-chip *ngFor="let s of opp.requiredSkills">{{ s }}</mat-chip>
+        </div>
+        <div class="opp-actions">
+          <ng-container *ngIf="role === 'volunteer'">
+            <button mat-raised-button color="primary" (click)="apply(opp._id)"
+              [disabled]="hasApplied(opp._id)">
+              {{ hasApplied(opp._id) ? '✓ Applied' : 'Apply' }}
+            </button>
+            <button mat-stroked-button routerLink="/messages">
+              <mat-icon>chat</mat-icon> Contact via Messaging
+            </button>
+          </ng-container>
+          <ng-container *ngIf="role === 'admin'">
+            <button mat-stroked-button [routerLink]="['/opportunities', opp._id, 'edit']">Edit</button>
+            <button mat-stroked-button (click)="viewApplications(opp)">View Applications</button>
+            <button mat-stroked-button color="warn" (click)="deleteOpportunity(opp._id)">Delete</button>
+          </ng-container>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    <p *ngIf="!loading && opportunities.length === 0" class="empty">No opportunities found.</p>
+  </div>
+</div>
